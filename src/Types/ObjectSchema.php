@@ -9,7 +9,7 @@ use Webmozart\Assert\Assert;
 /**
  * @see https://json-schema.org/understanding-json-schema/reference/object
  */
-final class ObjectSchema implements Schema
+final class ObjectSchema implements SchemaWithDescription
 {
     /**
      * @param array<mixed>|null $default
@@ -38,7 +38,6 @@ final class ObjectSchema implements Schema
         // TODO add dependentRequired https://json-schema.org/understanding-json-schema/reference/conditionals
         // TODO add dependentSchemas https://json-schema.org/understanding-json-schema/reference/conditionals
         // TODO add if-then-else https://json-schema.org/understanding-json-schema/reference/conditionals#ifthenelse
-
     ) {
         if ($this->required !== null) {
             Assert::notEmpty($this->required);
@@ -87,13 +86,18 @@ final class ObjectSchema implements Schema
         );
     }
 
+    public function withDescription(string $description): self
+    {
+        return $this->with(description: $description);
+    }
+
     public function jsonSerialize(): array
     {
         $array = [
             'type' => 'object',
-            ...array_filter(get_object_vars($this)),
+            ...array_filter(get_object_vars($this), static fn ($v) => $v !== null),
         ];
-        if ($this->comment) {
+        if ($this->comment !== null) {
             unset($array['comment']);
             $array['$comment'] = $this->comment;
         }

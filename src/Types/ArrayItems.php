@@ -6,17 +6,17 @@ namespace Wwwision\TypesJSONSchema\Types;
 
 use ArrayIterator;
 use IteratorAggregate;
+use JsonSerializable;
 use Traversable;
-use Webmozart\Assert\Assert;
 
 /**
  * @see https://json-schema.org/understanding-json-schema/reference/array#items
  * @implements IteratorAggregate<Schema>
  */
-final class ArrayItems implements IteratorAggregate
+final class ArrayItems implements IteratorAggregate, JsonSerializable
 {
     /**
-     * @param array<string, Schema> $items
+     * @param array<Schema> $items
      */
     private function __construct(
         private readonly array $items
@@ -25,12 +25,19 @@ final class ArrayItems implements IteratorAggregate
 
     public static function create(Schema ...$items): self
     {
-        Assert::isMap($items, 'Array items has to be a map with string keys');
         return new self($items);
     }
 
     public function getIterator(): Traversable
     {
         return new ArrayIterator($this->items);
+    }
+
+    /**
+     * @return array<Schema>
+     */
+    public function jsonSerialize(): array
+    {
+        return $this->items;
     }
 }

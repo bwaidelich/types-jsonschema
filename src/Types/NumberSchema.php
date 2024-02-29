@@ -7,7 +7,7 @@ namespace Wwwision\TypesJSONSchema\Types;
 /**
  * @see https://json-schema.org/understanding-json-schema/reference/numeric#number
  */
-final class NumberSchema implements Schema
+final class NumberSchema implements SchemaWithDescription
 {
     /**
      * @param array<int|float>|null $examples
@@ -72,11 +72,16 @@ final class NumberSchema implements Schema
         );
     }
 
+    public function withDescription(string $description): self
+    {
+        return $this->with(description: $description);
+    }
+
     public function jsonSerialize(): array
     {
         $array = [
             'type' => 'number',
-            ...array_filter(get_object_vars($this)),
+            ...array_filter(get_object_vars($this), static fn ($v) => $v !== null),
         ];
         if ($this->comment) {
             unset($array['comment']);

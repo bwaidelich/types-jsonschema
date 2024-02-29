@@ -9,7 +9,7 @@ use Webmozart\Assert\Assert;
 /**
  * @see https://json-schema.org/understanding-json-schema/reference/array
  */
-final class ArraySchema implements Schema
+final class ArraySchema implements SchemaWithDescription
 {
     /**
      * @param array<mixed>|null $default
@@ -26,7 +26,7 @@ final class ArraySchema implements Schema
         public readonly ?bool $deprecated = null,
         public readonly ?string $comment = null,
         public readonly ?array $const = null,
-        public readonly ArrayItems|false|Schema|null $items = null,
+        public readonly Schema|false|null $items = null,
         public readonly ?ArrayItems $prefixItems = null,
         public readonly ArrayItems|false|Schema|null $unevaluatedItems = null,
         public readonly ?Schema $contains = null,
@@ -35,8 +35,7 @@ final class ArraySchema implements Schema
         public readonly ?int $minItems = null,
         public readonly ?int $maxItems = null,
         public readonly ?bool $uniqueItems = null,
-    )
-    {
+    ) {
         if ($this->contains === null) {
             Assert::null($this->minContains, '"minContains" can only be used if "contains" is defined');
             Assert::null($this->maxContains, '"maxContains" can only be used if "contains" is defined');
@@ -58,7 +57,7 @@ final class ArraySchema implements Schema
         ?bool $deprecated = null,
         ?string $comment = null,
         ?array $const = null,
-        ArrayItems|false|Schema|null $items = null,
+        Schema|false|null $items = null,
         ?ArrayItems $prefixItems = null,
         ArrayItems|false|Schema|null $unevaluatedItems = null,
         ?Schema $contains = null,
@@ -90,11 +89,16 @@ final class ArraySchema implements Schema
         );
     }
 
+    public function withDescription(string $description): self
+    {
+        return $this->with(description: $description);
+    }
+
     public function jsonSerialize(): array
     {
         $array = [
             'type' => 'array',
-            ...array_filter(get_object_vars($this)),
+            ...array_filter(get_object_vars($this), static fn ($v) => $v !== null),
         ];
         if ($this->comment) {
             unset($array['comment']);

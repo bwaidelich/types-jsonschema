@@ -7,7 +7,7 @@ namespace Wwwision\TypesJSONSchema\Types;
 /**
  * @see https://json-schema.org/understanding-json-schema/reference/boolean
  */
-final class BooleanSchema implements Schema
+final class BooleanSchema implements SchemaWithDescription
 {
     /**
      * @param array<bool>|null $examples
@@ -52,11 +52,16 @@ final class BooleanSchema implements Schema
         );
     }
 
+    public function withDescription(string $description): self
+    {
+        return $this->with(description: $description);
+    }
+
     public function jsonSerialize(): array
     {
         $array = [
             'type' => 'boolean',
-            ...array_filter(get_object_vars($this)),
+            ...array_filter(get_object_vars($this), static fn ($v) => $v !== null),
         ];
         if ($this->comment) {
             unset($array['comment']);

@@ -35,6 +35,9 @@ final class ObjectProperties implements IteratorAggregate, JsonSerializable
         return new ArrayIterator($this->properties);
     }
 
+    /**
+     * @return array<string, Schema>
+     */
     public function jsonSerialize(): array
     {
         return $this->properties;

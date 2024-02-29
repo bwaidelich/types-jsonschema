@@ -7,7 +7,7 @@ namespace Wwwision\TypesJSONSchema\Types;
 /**
  * @see https://json-schema.org/understanding-json-schema/reference/numeric#integer
  */
-final class IntegerSchema implements Schema
+final class IntegerSchema implements SchemaWithDescription
 {
     /**
      * @param array<int>|null $examples
@@ -72,11 +72,16 @@ final class IntegerSchema implements Schema
         );
     }
 
+    public function withDescription(string $description): self
+    {
+        return $this->with(description: $description);
+    }
+
     public function jsonSerialize(): array
     {
         $array = [
             'type' => 'integer',
-            ...array_filter(get_object_vars($this)),
+            ...array_filter(get_object_vars($this), static fn ($v) => $v !== null),
         ];
         if ($this->comment) {
             unset($array['comment']);
