@@ -21,7 +21,7 @@
     ],
     "require": {
         "php": ">=8.1",
-        "wwwision/types": "@dev",
+        "wwwision/types": "^1.2",
         "webmozart/assert": "^1.11"
     },
     "require-dev": {
