@@ -22,8 +22,7 @@ final class BooleanSchema implements SchemaWithDescription
         public readonly ?bool $deprecated = null,
         public readonly ?string $comment = null,
         public readonly ?bool $const = null,
-    ) {
-    }
+    ) {}
 
     /**
      * @param array<bool>|null $examples
@@ -61,7 +60,7 @@ final class BooleanSchema implements SchemaWithDescription
     {
         $array = [
             'type' => 'boolean',
-            ...array_filter(get_object_vars($this), static fn ($v) => $v !== null),
+            ...array_filter(get_object_vars($this), static fn($v) => $v !== null),
         ];
         if ($this->comment) {
             unset($array['comment']);

@@ -19,9 +19,8 @@ final class ArrayItems implements IteratorAggregate, JsonSerializable
      * @param array<Schema> $items
      */
     private function __construct(
-        private readonly array $items
-    ) {
-    }
+        private readonly array $items,
+    ) {}
 
     public static function create(Schema ...$items): self
     {

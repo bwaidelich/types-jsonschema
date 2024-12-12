@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace PHPUnit\Types;
@@ -10,7 +11,6 @@ use Wwwision\TypesJSONSchema\Types\IntegerSchema;
 #[CoversClass(IntegerSchema::class)]
 final class IntegerSchemaTest extends TestCase
 {
-
     public function test_fully_fledged(): void
     {
         $schema = new IntegerSchema(
@@ -27,7 +27,7 @@ final class IntegerSchemaTest extends TestCase
             multipleOf: 2,
             minimum: 3,
             exclusiveMinimum: true,
-            maximum:  10,
+            maximum: 10,
             exclusiveMaximum: true,
         );
         self::assertJsonStringEqualsJsonString('{"type":"integer","title":"some title","description":"some description","default":123,"examples":[321,222],"readOnly":true,"writeOnly":false,"deprecated":true,"enum":[123,321,222],"const":321,"multipleOf":2,"minimum":3,"exclusiveMinimum":true,"maximum":10,"exclusiveMaximum":true,"$comment":"some comment"}', json_encode($schema));
@@ -49,7 +49,7 @@ final class IntegerSchemaTest extends TestCase
             multipleOf: 2,
             minimum: 3,
             exclusiveMinimum: true,
-            maximum:  10,
+            maximum: 10,
             exclusiveMaximum: true,
         );
         $schema = $schema->with(
@@ -66,7 +66,7 @@ final class IntegerSchemaTest extends TestCase
             multipleOf: 3,
             minimum: 4,
             exclusiveMinimum: false,
-            maximum:  12,
+            maximum: 12,
             exclusiveMaximum: false,
         );
         self::assertJsonStringEqualsJsonString('{"type":"integer","title":"some changed title","description":"some changed description","default":321,"examples":[333,124],"readOnly":false,"writeOnly":true,"deprecated":false,"enum":[333,124,222],"const":123,"multipleOf":3,"minimum":4,"exclusiveMinimum":false,"maximum":12,"exclusiveMaximum":false,"$comment":"some changed comment"}', json_encode($schema));

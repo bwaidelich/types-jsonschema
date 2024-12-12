@@ -28,6 +28,7 @@ use Wwwision\TypesJSONSchema\Types\Schema;
 use Wwwision\TypesJSONSchema\Types\SchemaWithDescription;
 use Wwwision\TypesJSONSchema\Types\StringFormat;
 use Wwwision\TypesJSONSchema\Types\StringSchema;
+
 use function Wwwision\Types\instantiate;
 
 final class JSONSchemaGenerator
@@ -96,12 +97,12 @@ final class JSONSchemaGenerator
         if ($schema->getBackingType() === 'int') {
             return new IntegerSchema(
                 description: $schema->getDescription(),
-                enum: array_values(array_map(static fn (Types\EnumCaseSchema $caseSchema) => (int)$caseSchema->getValue(), $schema->caseSchemas)),
+                enum: array_values(array_map(static fn(Types\EnumCaseSchema $caseSchema) => (int) $caseSchema->getValue(), $schema->caseSchemas)),
             );
         }
         return new StringSchema(
             description: $schema->getDescription(),
-            enum: array_values(array_map(static fn (Types\EnumCaseSchema $caseSchema) => (string)$caseSchema->getValue(), $schema->caseSchemas)),
+            enum: array_values(array_map(static fn(Types\EnumCaseSchema $caseSchema) => (string) $caseSchema->getValue(), $schema->caseSchemas)),
         );
     }
 

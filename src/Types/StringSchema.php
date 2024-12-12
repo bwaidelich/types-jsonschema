@@ -30,8 +30,7 @@ final class StringSchema implements SchemaWithDescription
         public readonly ?string $pattern = null,
         public readonly ?string $contentMediaType = null,
         public readonly ?string $contentEncoding = null,
-    ) {
-    }
+    ) {}
 
     /**
      * @param array<string>|null $examples
@@ -84,7 +83,7 @@ final class StringSchema implements SchemaWithDescription
     {
         $array = [
             'type' => 'string',
-            ...array_filter(get_object_vars($this), static fn ($v) => $v !== null),
+            ...array_filter(get_object_vars($this), static fn($v) => $v !== null),
         ];
         if ($this->comment) {
             unset($array['comment']);

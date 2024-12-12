@@ -17,9 +17,7 @@ final class AnyOfSchema implements IteratorAggregate, Schema
     /**
      * @param array<Schema> $items
      */
-    private function __construct(private readonly array $items)
-    {
-    }
+    private function __construct(private readonly array $items) {}
 
     public static function create(Schema ...$items): self
     {

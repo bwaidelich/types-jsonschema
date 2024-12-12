@@ -20,9 +20,8 @@ final class ObjectProperties implements IteratorAggregate, JsonSerializable
      * @param array<string, Schema> $properties
      */
     private function __construct(
-        private readonly array $properties
-    ) {
-    }
+        private readonly array $properties,
+    ) {}
 
     public static function create(Schema ...$properties): self
     {

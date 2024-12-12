@@ -11,8 +11,7 @@ final class NotSchema implements Schema
 {
     public function __construct(
         public readonly Schema $schema,
-    ) {
-    }
+    ) {}
 
     public function jsonSerialize(): array
     {

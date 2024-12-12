@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace PHPUnit\Types;
@@ -10,7 +11,6 @@ use Wwwision\TypesJSONSchema\Types\ReferenceSchema;
 #[CoversClass(ReferenceSchema::class)]
 final class ReferenceSchemaTest extends TestCase
 {
-
     public function test(): void
     {
         $schema = new ReferenceSchema('some-ref');

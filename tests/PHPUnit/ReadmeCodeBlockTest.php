@@ -10,6 +10,7 @@ use PHPUnit\Framework\Attributes\CoversNothing;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Wwwision\Types\Exception\CoerceException;
+
 use function file_get_contents;
 use function get_debug_type;
 use function preg_match;
@@ -19,7 +20,6 @@ use function sprintf;
 #[CoversNothing]
 final class ReadmeCodeBlockTest extends TestCase
 {
-
     private static ?string $previousNamespace = null;
 
     public static function code_blocks_dataProvider(): Generator
@@ -39,7 +39,7 @@ final class ReadmeCodeBlockTest extends TestCase
     }
 
     #[DataProvider('code_blocks_dataProvider')]
-    public function test_code_blocks(string $code, int $lineNumber, string $expectedExceptionMessage = null): void
+    public function test_code_blocks(string $code, int $lineNumber, string|null $expectedExceptionMessage = null): void
     {
         if (self::$previousNamespace !== null && str_starts_with(trim($code), '// ...')) {
             $namespace = self::$previousNamespace;

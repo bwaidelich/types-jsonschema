@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace PHPUnit\Types;
@@ -10,7 +11,6 @@ use Wwwision\TypesJSONSchema\Types\ObjectProperties;
 #[CoversClass(ObjectProperties::class)]
 final class ObjectPropertiesTest extends TestCase
 {
-
     public function test_empty(): void
     {
         $objectProperties = ObjectProperties::create();

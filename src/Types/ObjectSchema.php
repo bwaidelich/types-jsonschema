@@ -95,7 +95,7 @@ final class ObjectSchema implements SchemaWithDescription
     {
         $array = [
             'type' => 'object',
-            ...array_filter(get_object_vars($this), static fn ($v) => $v !== null),
+            ...array_filter(get_object_vars($this), static fn($v) => $v !== null),
         ];
         if ($this->comment !== null) {
             unset($array['comment']);
