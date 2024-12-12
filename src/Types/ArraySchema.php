@@ -98,7 +98,7 @@ final class ArraySchema implements SchemaWithDescription
     {
         $array = [
             'type' => 'array',
-            ...array_filter(get_object_vars($this), static fn ($v) => $v !== null),
+            ...array_filter(get_object_vars($this), static fn($v) => $v !== null),
         ];
         if ($this->comment) {
             unset($array['comment']);

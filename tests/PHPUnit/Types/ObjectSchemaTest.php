@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace PHPUnit\Types;
@@ -15,7 +16,6 @@ use Wwwision\TypesJSONSchema\Types\StringSchema;
 #[CoversClass(StringSchema::class)]
 final class ObjectSchemaTest extends TestCase
 {
-
     public function test_fully_fledged(): void
     {
         $mockSchema1 = $this->getMockBuilder(Schema::class)->getMock();

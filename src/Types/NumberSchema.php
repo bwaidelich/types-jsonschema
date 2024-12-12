@@ -29,8 +29,7 @@ final class NumberSchema implements SchemaWithDescription
         public readonly ?bool $exclusiveMinimum = null,
         public readonly int|float|null $maximum = null,
         public readonly ?bool $exclusiveMaximum = null,
-    ) {
-    }
+    ) {}
 
     /**
      * @param array<int|float>|null $examples
@@ -81,7 +80,7 @@ final class NumberSchema implements SchemaWithDescription
     {
         $array = [
             'type' => 'number',
-            ...array_filter(get_object_vars($this), static fn ($v) => $v !== null),
+            ...array_filter(get_object_vars($this), static fn($v) => $v !== null),
         ];
         if ($this->comment) {
             unset($array['comment']);

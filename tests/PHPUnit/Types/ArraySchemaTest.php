@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace PHPUnit\Types;
@@ -14,7 +15,6 @@ use Wwwision\TypesJSONSchema\Types\Schema;
 #[CoversClass(ArrayItems::class)]
 final class ArraySchemaTest extends TestCase
 {
-
     public function test_empty(): void
     {
         $schema = new ArraySchema();

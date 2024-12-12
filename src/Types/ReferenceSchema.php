@@ -10,9 +10,8 @@ namespace Wwwision\TypesJSONSchema\Types;
 final class ReferenceSchema implements Schema
 {
     public function __construct(
-        public readonly string $ref
-    ) {
-    }
+        public readonly string $ref,
+    ) {}
 
     /**
      * @return array<string, string>

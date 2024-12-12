@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Wwwision\TypesJSONSchema\Tests\PHPUnit\Types;
@@ -11,7 +12,6 @@ use Wwwision\TypesJSONSchema\Types\Schema;
 #[CoversClass(AllOfSchema::class)]
 final class AllOfSchemaTest extends TestCase
 {
-
     public function test_empty(): void
     {
         $schema = AllOfSchema::create();

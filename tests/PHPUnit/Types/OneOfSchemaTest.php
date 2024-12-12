@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace PHPUnit\Types;
@@ -12,7 +13,6 @@ use Wwwision\TypesJSONSchema\Types\Schema;
 #[CoversClass(OneOfSchema::class)]
 final class OneOfSchemaTest extends TestCase
 {
-
     public function test_empty(): void
     {
         $schema = OneOfSchema::create();

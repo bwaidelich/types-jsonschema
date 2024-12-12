@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace PHPUnit\Types;
@@ -10,7 +11,6 @@ use Wwwision\TypesJSONSchema\Types\BooleanSchema;
 #[CoversClass(BooleanSchema::class)]
 final class BooelanSchemaTest extends TestCase
 {
-
     public function test_fully_fledged(): void
     {
         $schema = new BooleanSchema(

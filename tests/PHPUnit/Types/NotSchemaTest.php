@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace PHPUnit\Types;
@@ -11,7 +12,6 @@ use Wwwision\TypesJSONSchema\Types\Schema;
 #[CoversClass(NotSchema::class)]
 final class NotSchemaTest extends TestCase
 {
-
     public function test(): void
     {
         $mockSchema1 = $this->getMockBuilder(Schema::class)->getMock();

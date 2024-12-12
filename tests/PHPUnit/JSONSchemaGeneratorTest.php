@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Wwwision\TypesJSONSchema\Tests\PHPUnit;
@@ -31,6 +32,7 @@ use Wwwision\TypesJSONSchema\Types\NumberSchema;
 use Wwwision\TypesJSONSchema\Types\ObjectProperties;
 use Wwwision\TypesJSONSchema\Types\ObjectSchema;
 use Wwwision\TypesJSONSchema\Types\StringSchema;
+
 use function Wwwision\Types\instantiate;
 
 #[CoversClass(ArraySchema::class)]
@@ -43,7 +45,6 @@ use function Wwwision\Types\instantiate;
 #[CoversClass(StringSchema::class)]
 final class JSONSchemaGeneratorTest extends TestCase
 {
-
     public function test_fromClass_throws_exception_for_empty_string(): void
     {
         $this->expectException(InvalidArgumentException::class);
@@ -88,15 +89,15 @@ final class JSONSchemaGeneratorTest extends TestCase
 
     public static function fromReflectionParameter_dataProvider(): Generator
     {
-        yield 'bool' => ['reflectionParameter' => new ReflectionParameter(fn (bool $param) => null, 0), 'expectedResult' => '{"type":"boolean"}'];
-        yield 'int' => ['reflectionParameter' => new ReflectionParameter(fn (int $param) => null, 0), 'expectedResult' => '{"type":"integer"}'];
-        yield 'string' => ['reflectionParameter' => new ReflectionParameter(fn (string $param) => null, 0), 'expectedResult' => '{"type":"string"}'];
-        yield 'float' => ['reflectionParameter' => new ReflectionParameter(fn (float $param) => null, 0), 'expectedResult' => '{"type":"number"}'];
+        yield 'bool' => ['reflectionParameter' => new ReflectionParameter(fn(bool $param) => null, 0), 'expectedResult' => '{"type":"boolean"}'];
+        yield 'int' => ['reflectionParameter' => new ReflectionParameter(fn(int $param) => null, 0), 'expectedResult' => '{"type":"integer"}'];
+        yield 'string' => ['reflectionParameter' => new ReflectionParameter(fn(string $param) => null, 0), 'expectedResult' => '{"type":"string"}'];
+        yield 'float' => ['reflectionParameter' => new ReflectionParameter(fn(float $param) => null, 0), 'expectedResult' => '{"type":"number"}'];
 
-        yield 'string based' => ['reflectionParameter' => new ReflectionParameter(fn (GivenName $param) => null, 0), 'expectedResult' => '{"type":"string","description":"First name of a person","minLength":3,"maxLength":20}'];
-        yield 'string based with custom description' => ['reflectionParameter' => new ReflectionParameter(fn (#[Description('some overridden description')] GivenName $param) => null, 0), 'expectedResult' => '{"type":"string","description":"some overridden description","minLength":3,"maxLength":20}'];
+        yield 'string based' => ['reflectionParameter' => new ReflectionParameter(fn(GivenName $param) => null, 0), 'expectedResult' => '{"type":"string","description":"First name of a person","minLength":3,"maxLength":20}'];
+        yield 'string based with custom description' => ['reflectionParameter' => new ReflectionParameter(fn(#[Description('some overridden description')] GivenName $param) => null, 0), 'expectedResult' => '{"type":"string","description":"some overridden description","minLength":3,"maxLength":20}'];
 
-        yield 'string with custom description' => ['reflectionParameter' => new ReflectionParameter(fn (#[Description('some description')] string $param) => null, 0), 'expectedResult' => '{"type":"string","description":"some description"}'];
+        yield 'string with custom description' => ['reflectionParameter' => new ReflectionParameter(fn(#[Description('some description')] string $param) => null, 0), 'expectedResult' => '{"type":"string","description":"some description"}'];
     }
 
     #[DataProvider('fromReflectionParameter_dataProvider')]
@@ -112,9 +113,7 @@ final class JSONSchemaGeneratorTest extends TestCase
 #[Description('First name of a person')]
 final class GivenName implements SomeInterface, JsonSerializable
 {
-    private function __construct(public readonly string $value)
-    {
-    }
+    private function __construct(public readonly string $value) {}
 
     public function someMethod(): string
     {
@@ -136,9 +135,7 @@ final class GivenName implements SomeInterface, JsonSerializable
 #[Description('Last name of a person')]
 final class FamilyName implements JsonSerializable, SomeInterface
 {
-    private function __construct(public readonly string $value)
-    {
-    }
+    private function __construct(public readonly string $value) {}
 
     public function someMethod(): string
     {
@@ -160,9 +157,7 @@ final class FamilyName implements JsonSerializable, SomeInterface
 #[Description('The age of a person in years')]
 final class Age
 {
-    private function __construct(public readonly int $value)
-    {
-    }
+    private function __construct(public readonly int $value) {}
 }
 
 
@@ -173,9 +168,7 @@ final class FullName implements SomeInterface
         #[Description('Overridden given name description')]
         public readonly GivenName $givenName,
         public readonly FamilyName $familyName,
-    )
-    {
-    }
+    ) {}
 
     public function someMethod(): string
     {
@@ -192,7 +185,6 @@ final class FullName implements SomeInterface
 #[ListBased(itemClassName: FullName::class, minCount: 2, maxCount: 5)]
 final class FullNames implements IteratorAggregate
 {
-
     private array $fullNames;
 
     /** @param array<FullName> $fullNames */
@@ -210,11 +202,8 @@ final class FullNames implements IteratorAggregate
 #[ListBased(itemClassName: GivenName::class, maxCount: 4)]
 final class GivenNames implements IteratorAggregate, JsonSerializable
 {
-
     /** @param array<GivenName> $givenNames */
-    private function __construct(private readonly array $givenNames)
-    {
-    }
+    private function __construct(private readonly array $givenNames) {}
 
     public function getIterator(): Traversable
     {
@@ -252,25 +241,19 @@ final class UriMap implements IteratorAggregate, JsonSerializable
 #[StringBased(pattern: '^(?!magic).*')]
 final class NotMagic
 {
-    private function __construct(public readonly string $value)
-    {
-    }
+    private function __construct(public readonly string $value) {}
 }
 
 #[StringBased(format: StringTypeFormat::email)]
 final class EmailAddress
 {
-    private function __construct(public readonly string $value)
-    {
-    }
+    private function __construct(public readonly string $value) {}
 }
 
 #[StringBased(format: StringTypeFormat::uri)]
 final class Uri implements JsonSerializable
 {
-    private function __construct(public readonly string $value)
-    {
-    }
+    private function __construct(public readonly string $value) {}
 
     public function jsonSerialize(): string
     {
@@ -293,17 +276,13 @@ final class Date
 #[StringBased(format: StringTypeFormat::date_time)]
 final class DateTime
 {
-    private function __construct(public readonly string $value)
-    {
-    }
+    private function __construct(public readonly string $value) {}
 }
 
 #[StringBased(format: StringTypeFormat::uuid)]
 final class Uuid
 {
-    private function __construct(public readonly string $value)
-    {
-    }
+    private function __construct(public readonly string $value) {}
 }
 
 #[Description('honorific title of a person')]
@@ -339,12 +318,12 @@ enum RomanNumber: string
     case IV = '4';
 }
 
-final class NestedShape {
+final class NestedShape
+{
     public function __construct(
         public readonly ShapeWithOptionalTypes $shapeWithOptionalTypes,
         public readonly ShapeWithBool $shapeWithBool,
-    ) {
-    }
+    ) {}
 }
 
 final class ShapeWithOptionalTypes
@@ -356,32 +335,34 @@ final class ShapeWithOptionalTypes
         public readonly ?int $optionalInt = null,
         public readonly ?bool $optionalBool = false,
         public readonly ?string $optionalString = null,
-    ) {
-    }
+    ) {}
 }
 
-final class ShapeWithInvalidObjectProperty {
+final class ShapeWithInvalidObjectProperty
+{
     public function __construct(
         public readonly stdClass $someProperty,
-    ) {
-    }
+    ) {}
 }
 
-final class ShapeWithBool {
+final class ShapeWithBool
+{
     private function __construct(
         #[Description('Description for literal bool')]
         public readonly bool $value,
     ) {}
 }
 
-final class ShapeWithInt {
+final class ShapeWithInt
+{
     private function __construct(
         #[Description('Description for literal int')]
         public readonly int $value,
     ) {}
 }
 
-final class ShapeWithString {
+final class ShapeWithString
+{
     private function __construct(
         #[Description('Description for literal string')]
         public readonly string $value,
@@ -389,7 +370,8 @@ final class ShapeWithString {
 }
 
 #[Description('SomeInterface description')]
-interface SomeInterface {
+interface SomeInterface
+{
     #[Description('Custom description for "someMethod"')]
     public function someMethod(): string;
     #[Description('Custom description for "someOtherMethod"')]
@@ -397,29 +379,33 @@ interface SomeInterface {
 }
 
 #[FloatBased(minimum: -180.0, maximum: 180.5)]
-final class Longitude {
+final class Longitude
+{
     private function __construct(
         public readonly float $value,
     ) {}
 }
 
 #[FloatBased(minimum: -90, maximum: 90)]
-final class Latitude {
+final class Latitude
+{
     private function __construct(
         public readonly float $value,
     ) {}
 }
 
-final class GeoCoordinates {
+final class GeoCoordinates
+{
     public function __construct(
         public readonly Longitude $longitude,
-        public readonly Latitude $latitude
+        public readonly Latitude $latitude,
     ) {}
 }
 
 
-interface SomeInvalidInterface {
-    public function methodWithParameters(string $param = null): string;
+interface SomeInvalidInterface
+{
+    public function methodWithParameters(string|null $param = null): string;
 }
 
 #[StringBased(minLength: 10, maxLength: 2, pattern: '^foo$', format: StringTypeFormat::email)]

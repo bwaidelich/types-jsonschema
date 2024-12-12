@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace PHPUnit\Types;
@@ -10,7 +11,6 @@ use Wwwision\TypesJSONSchema\Types\ArrayItems;
 #[CoversClass(ArrayItems::class)]
 final class ArrayItemsTest extends TestCase
 {
-
     public function test_empty(): void
     {
         $arrayItems = ArrayItems::create();
