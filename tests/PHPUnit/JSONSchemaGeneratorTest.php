@@ -17,6 +17,7 @@ use ReflectionParameter;
 use stdClass;
 use Traversable;
 use Wwwision\Types\Attributes\Description;
+use Wwwision\Types\Attributes\Discriminator;
 use Wwwision\Types\Attributes\FloatBased;
 use Wwwision\Types\Attributes\IntegerBased;
 use Wwwision\Types\Attributes\ListBased;
@@ -27,16 +28,19 @@ use Wwwision\Types\Schema\StringTypeFormat;
 use Wwwision\TypesJSONSchema\JSONSchemaGenerator;
 use Wwwision\TypesJSONSchema\Types\ArraySchema;
 use Wwwision\TypesJSONSchema\Types\BooleanSchema;
+use Wwwision\TypesJSONSchema\Types\Discriminator as JsonSchemaDiscriminator;
 use Wwwision\TypesJSONSchema\Types\IntegerSchema;
 use Wwwision\TypesJSONSchema\Types\NumberSchema;
 use Wwwision\TypesJSONSchema\Types\ObjectProperties;
 use Wwwision\TypesJSONSchema\Types\ObjectSchema;
+use Wwwision\TypesJSONSchema\Types\OneOfSchema;
 use Wwwision\TypesJSONSchema\Types\StringSchema;
 
 use function Wwwision\Types\instantiate;
 
 #[CoversClass(ArraySchema::class)]
 #[CoversClass(BooleanSchema::class)]
+#[CoversClass(JsonSchemaDiscriminator::class)]
 #[CoversClass(IntegerSchema::class)]
 #[CoversClass(JSONSchemaGenerator::class)]
 #[CoversClass(NumberSchema::class)]
@@ -76,8 +80,10 @@ final class JSONSchemaGeneratorTest extends TestCase
         yield 'shape with int' => ['className' => ShapeWithInt::class, 'expectedResult' => '{"type":"object","properties":{"value":{"type":"integer","description":"Description for literal int"}},"additionalProperties":false,"required":["value"]}'];
         yield 'shape with string' => ['className' => ShapeWithString::class, 'expectedResult' => '{"type":"object","properties":{"value":{"type":"string","description":"Description for literal string"}},"additionalProperties":false,"required":["value"]}'];
         yield 'shape with floats' => ['className' => GeoCoordinates::class, 'expectedResult' => '{"type":"object","properties":{"longitude":{"type":"number","minimum":-180,"maximum":180.5},"latitude":{"type":"number","minimum":-90,"maximum":90}},"additionalProperties":false,"required":["longitude","latitude"]}'];
+        yield 'shape with discriminated union type' => ['className' => SomeShapeWithDiscriminatedUnionType::class, 'expectedResult' => '{"additionalProperties":false,"properties":{"name":{"oneOf":[{"description":"First name of a person","maxLength":20,"minLength":3,"type":"string"},{"description":"Last name of a person","maxLength":20,"minLength":3,"type":"string"}]}},"required":["name"],"type":"object"}'];
 
         yield 'interface' => ['className' => SomeInterface::class, 'expectedResult' => '{"type":"object","description":"SomeInterface description","properties":{"__type":{"type":"string","description":"interface type discriminator"},"someMethod":{"type":"string","description":"Custom description for \"someMethod\""},"someOtherMethod":{"type":"string","description":"Custom description for \"someOtherMethod\"","minLength":3,"maxLength":20}},"additionalProperties":false,"required":["__type","someMethod"]}'];
+        yield 'interface with discriminator' => ['className' => SomeInterfaceWithDiscriminator::class, 'expectedResult' => '{"additionalProperties":false,"properties":{"type":{"description":"interface type discriminator","type":"string"}},"required":["type"],"type":"object"}'];
     }
 
     #[DataProvider('fromClass_dataProvider')]
@@ -107,11 +113,34 @@ final class JSONSchemaGeneratorTest extends TestCase
         self::assertJsonStringEqualsJsonString($expectedResult, json_encode($schema));
     }
 
+    public function test_fromSchema_respects_interface_discriminators(): void
+    {
+        $shapeSchema = Parser::getSchema(SomeInterfaceWithDiscriminator::class);
+        $jsonSchema = JSONSchemaGenerator::fromSchema($shapeSchema);
+        self::assertInstanceOf(ObjectSchema::class, $jsonSchema);
+        self::assertNotNull($shapeSchema->discriminator);
+        self::assertSame('type', $shapeSchema->discriminator->propertyName);
+        self::assertSame(['given' => GivenName::class, 'family' => FamilyName::class], $shapeSchema->discriminator->mapping);
+    }
+
+    public function test_fromSchema_respects_union_type_discriminators(): void
+    {
+        $shapeSchema = Parser::getSchema(SomeShapeWithDiscriminatedUnionType::class);
+        $jsonSchema = JSONSchemaGenerator::fromSchema($shapeSchema);
+        self::assertInstanceOf(ObjectSchema::class, $jsonSchema);
+        self::assertNotNull($jsonSchema->properties);
+        $oneOfSchema = iterator_to_array($jsonSchema->properties)['name'];
+        self::assertInstanceOf(OneOfSchema::class, $oneOfSchema);
+        self::assertNotNull($oneOfSchema->discriminator);
+        self::assertSame('t', $oneOfSchema->discriminator->propertyName);
+        self::assertSame(['g' => GivenName::class, 'f' => FamilyName::class], $oneOfSchema->discriminator->mapping);
+    }
+
 }
 
 #[StringBased(minLength: 3, maxLength: 20)]
 #[Description('First name of a person')]
-final class GivenName implements SomeInterface, JsonSerializable
+final class GivenName implements SomeInterface, SomeInterfaceWithDiscriminator, JsonSerializable
 {
     private function __construct(public readonly string $value) {}
 
@@ -133,7 +162,7 @@ final class GivenName implements SomeInterface, JsonSerializable
 
 #[StringBased(minLength: 3, maxLength: 20)]
 #[Description('Last name of a person')]
-final class FamilyName implements JsonSerializable, SomeInterface
+final class FamilyName implements JsonSerializable, SomeInterface, SomeInterfaceWithDiscriminator
 {
     private function __construct(public readonly string $value) {}
 
@@ -376,6 +405,17 @@ interface SomeInterface
     public function someMethod(): string;
     #[Description('Custom description for "someOtherMethod"')]
     public function someOtherMethod(): ?FamilyName;
+}
+
+#[Discriminator(propertyName: 'type', mapping: ['given' => GivenName::class, 'family' => FamilyName::class])]
+interface SomeInterfaceWithDiscriminator {}
+
+class SomeShapeWithDiscriminatedUnionType
+{
+    public function __construct(
+        #[Discriminator(propertyName: 't', mapping: ['g' => GivenName::class, 'f' => FamilyName::class])]
+        public readonly GivenName|FamilyName $name,
+    ) {}
 }
 
 #[FloatBased(minimum: -180.0, maximum: 180.5)]
