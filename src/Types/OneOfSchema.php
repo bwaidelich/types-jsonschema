@@ -17,11 +17,19 @@ final class OneOfSchema implements IteratorAggregate, Schema
     /**
      * @param array<Schema> $items
      */
-    private function __construct(private readonly array $items) {}
+    private function __construct(
+        private readonly array $items,
+        public readonly Discriminator|null $discriminator,
+    ) {}
 
     public static function create(Schema ...$items): self
     {
-        return new self($items);
+        return new self($items, null);
+    }
+
+    public function withDiscriminator(Discriminator $discriminator): self
+    {
+        return new self($this->items, $discriminator);
     }
 
     public function jsonSerialize(): array

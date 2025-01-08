@@ -20,10 +20,12 @@ use Wwwision\Types\Schema\LiteralIntegerSchema;
 use Wwwision\Types\Schema\LiteralStringSchema;
 use Wwwision\TypesJSONSchema\Types\ArraySchema;
 use Wwwision\TypesJSONSchema\Types\BooleanSchema;
+use Wwwision\TypesJSONSchema\Types\Discriminator;
 use Wwwision\TypesJSONSchema\Types\IntegerSchema;
 use Wwwision\TypesJSONSchema\Types\NumberSchema;
 use Wwwision\TypesJSONSchema\Types\ObjectProperties;
 use Wwwision\TypesJSONSchema\Types\ObjectSchema;
+use Wwwision\TypesJSONSchema\Types\OneOfSchema;
 use Wwwision\TypesJSONSchema\Types\Schema;
 use Wwwision\TypesJSONSchema\Types\SchemaWithDescription;
 use Wwwision\TypesJSONSchema\Types\StringFormat;
@@ -88,6 +90,7 @@ final class JSONSchemaGenerator
             Types\InterfaceSchema::class => self::fromInterfaceSchema($schema),
             Types\StringSchema::class => self::fromStringSchema($schema),
             Types\FloatSchema::class => self::fromFloatSchema($schema),
+            Types\OneOfSchema::class => self::fromOneOfSchema($schema),
             default => throw new InvalidArgumentException(sprintf('Schema of type "%s" cannot be converted to JSON schema directly', get_debug_type($schema)), 1705424391),
         };
     }
@@ -163,13 +166,25 @@ final class JSONSchemaGenerator
         return self::fromShapeOrInterfaceSchema($schema);
     }
 
+    public static function fromOneOfSchema(Types\OneOfSchema $schema): OneOfSchema
+    {
+        $result = OneOfSchema::create(
+            ...array_map(self::fromSchema(...), $schema->subSchemas),
+        );
+        if ($schema->discriminator !== null) {
+            $result = $result->withDiscriminator(new Discriminator($schema->discriminator->propertyName, $schema->discriminator->mapping));
+        }
+        return $result;
+    }
+
     private static function fromShapeOrInterfaceSchema(Types\ShapeSchema|Types\InterfaceSchema $schema): ObjectSchema
     {
         if ($schema instanceof Types\InterfaceSchema) {
+            $discriminatorPropertyName = $schema->discriminator->propertyName ?? '__type';
             $propertySchemas = [
-                '__type' => new StringSchema(description: 'interface type discriminator'),
+                $discriminatorPropertyName => new StringSchema(description: 'interface type discriminator'),
             ];
-            $requiredProperties = ['__type'];
+            $requiredProperties = [$discriminatorPropertyName];
         } else {
             $propertySchemas = [];
             $requiredProperties = [];
