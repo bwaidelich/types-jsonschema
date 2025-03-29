@@ -29,6 +29,14 @@ final class ObjectProperties implements IteratorAggregate, JsonSerializable
         return new self($properties);
     }
 
+    /**
+     * @return array<string>
+     */
+    public function names(): array
+    {
+        return array_keys($this->properties);
+    }
+
     public function getIterator(): Traversable
     {
         return new ArrayIterator($this->properties);
