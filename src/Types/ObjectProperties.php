@@ -9,11 +9,13 @@ use IteratorAggregate;
 use JsonSerializable;
 use Traversable;
 use Webmozart\Assert\Assert;
+use Wwwision\Types\Attributes\ListBased;
 
 /**
  * @see https://json-schema.org/understanding-json-schema/reference/object#properties
  * @implements IteratorAggregate<Schema>
  */
+#[ListBased(itemClassName: Schema::class)]
 final class ObjectProperties implements IteratorAggregate, JsonSerializable
 {
     /**
