@@ -8,11 +8,13 @@ use ArrayIterator;
 use IteratorAggregate;
 use JsonSerializable;
 use Traversable;
+use Wwwision\Types\Attributes\ListBased;
 
 /**
  * @see https://json-schema.org/understanding-json-schema/reference/array#items
  * @implements IteratorAggregate<Schema>
  */
+#[ListBased(itemClassName: Schema::class)]
 final class ArrayItems implements IteratorAggregate, JsonSerializable
 {
     /**

@@ -7,11 +7,13 @@ namespace Wwwision\TypesJSONSchema\Types;
 use ArrayIterator;
 use IteratorAggregate;
 use Traversable;
+use Wwwision\Types\Attributes\ListBased;
 
 /**
  * @see https://json-schema.org/understanding-json-schema/reference/combining#anyOf
  * @implements IteratorAggregate<Schema>
  */
+#[ListBased(itemClassName: Schema::class)]
 final class AnyOfSchema implements IteratorAggregate, Schema
 {
     /**
