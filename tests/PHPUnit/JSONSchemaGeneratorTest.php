@@ -24,7 +24,6 @@ use Wwwision\TypesJSONSchema\Types\ObjectProperties;
 use Wwwision\TypesJSONSchema\Types\ObjectSchema;
 use Wwwision\TypesJSONSchema\Types\OneOfSchema;
 use Wwwision\TypesJSONSchema\Types\StringSchema;
-use Wwwision\TypesJSONSchema\Tests\PHPUnit\Fixture;
 
 #[CoversClass(ArraySchema::class)]
 #[CoversClass(BooleanSchema::class)]
@@ -68,10 +67,11 @@ final class JSONSchemaGeneratorTest extends TestCase
         yield 'shape with int' => ['className' => Fixture\ShapeWithInt::class, 'expectedResult' => '{"type":"object","properties":{"value":{"type":"integer","description":"Description for literal int"}},"additionalProperties":false,"required":["value"]}'];
         yield 'shape with string' => ['className' => Fixture\ShapeWithString::class, 'expectedResult' => '{"type":"object","properties":{"value":{"type":"string","description":"Description for literal string"}},"additionalProperties":false,"required":["value"]}'];
         yield 'shape with floats' => ['className' => Fixture\GeoCoordinates::class, 'expectedResult' => '{"type":"object","properties":{"longitude":{"type":"number","minimum":-180,"maximum":180.5},"latitude":{"type":"number","minimum":-90,"maximum":90}},"additionalProperties":false,"required":["longitude","latitude"]}'];
-        yield 'shape with discriminated union type' => ['className' => Fixture\SomeShapeWithDiscriminatedUnionType::class, 'expectedResult' => '{"additionalProperties":false,"properties":{"name":{"oneOf":[{"description":"First name of a person","maxLength":20,"minLength":3,"type":"string"},{"description":"Last name of a person","maxLength":20,"minLength":3,"type":"string"}]}},"required":["name"],"type":"object"}'];
+        yield 'shape with discriminated union type' => ['className' => Fixture\SomeShapeWithDiscriminatedUnionType::class, 'expectedResult' => '{"additionalProperties":false,"properties":{"name":{"discriminator":{"mapping":{"f":"Wwwision\\\\TypesJSONSchema\\\\Tests\\\\PHPUnit\\\\Fixture\\\\FamilyName","g":"Wwwision\\\\TypesJSONSchema\\\\Tests\\\\PHPUnit\\\\Fixture\\\\GivenName"},"propertyName":"t"},"oneOf":[{"description":"First name of a person","maxLength":20,"minLength":3,"type":"string"},{"description":"Last name of a person","maxLength":20,"minLength":3,"type":"string"}]}},"required":["name"],"type":"object"}'];
+        yield 'shape with interface property' => ['className' => Fixture\SomeShapeWithInterfaceProperty::class, 'expectedResult' => '{"additionalProperties":false,"properties":{"property":{"discriminator":{"mapping":{"family":"Wwwision\\\\TypesJSONSchema\\\\Tests\\\\PHPUnit\\\\Fixture\\\\FamilyName","given":"Wwwision\\\\TypesJSONSchema\\\\Tests\\\\PHPUnit\\\\Fixture\\\\GivenName"},"propertyName":"type"},"oneOf":[{"description":"First name of a person","maxLength":20,"minLength":3,"type":"string"},{"description":"Last name of a person","maxLength":20,"minLength":3,"type":"string"}]}},"required":["property"],"type":"object"}'];
 
-        yield 'interface' => ['className' => Fixture\SomeInterface::class, 'expectedResult' => '{"type":"object","description":"SomeInterface description","properties":{"__type":{"type":"string","description":"interface type discriminator"},"someMethod":{"type":"string","description":"Custom description for \"someMethod\""},"someOtherMethod":{"type":"string","description":"Custom description for \"someOtherMethod\"","minLength":3,"maxLength":20}},"additionalProperties":false,"required":["__type","someMethod"]}'];
-        yield 'interface with discriminator' => ['className' => Fixture\SomeInterfaceWithDiscriminator::class, 'expectedResult' => '{"additionalProperties":false,"properties":{"type":{"description":"interface type discriminator","type":"string"}},"required":["type"],"type":"object"}'];
+        yield 'interface' => ['className' => Fixture\SomeInterface::class, 'expectedResult' => '{"oneOf":[{"description":"First name of a person","maxLength":20,"minLength":3,"type":"string"},{"description":"Last name of a person","maxLength":20,"minLength":3,"type":"string"},{"additionalProperties":false,"description":"First and last name of a person","properties":{"familyName":{"description":"Last name of a person","maxLength":20,"minLength":3,"type":"string"},"givenName":{"description":"Overridden given name description","maxLength":20,"minLength":3,"type":"string"}},"required":["givenName","familyName"],"type":"object"}]}'];
+        yield 'interface with discriminator' => ['className' => Fixture\SomeInterfaceWithDiscriminator::class, 'expectedResult' => '{"discriminator":{"mapping":{"family":"Wwwision\\\\TypesJSONSchema\\\\Tests\\\\PHPUnit\\\\Fixture\\\\FamilyName","given":"Wwwision\\\\TypesJSONSchema\\\\Tests\\\\PHPUnit\\\\Fixture\\\\GivenName"},"propertyName":"type"},"oneOf":[{"description":"First name of a person","maxLength":20,"minLength":3,"type":"string"},{"description":"Last name of a person","maxLength":20,"minLength":3,"type":"string"}]}'];
     }
 
     #[DataProvider('fromClass_dataProvider')]
@@ -105,7 +105,7 @@ final class JSONSchemaGeneratorTest extends TestCase
     {
         $shapeSchema = Parser::getSchema(Fixture\SomeInterfaceWithDiscriminator::class);
         $jsonSchema = JSONSchemaGenerator::fromSchema($shapeSchema);
-        self::assertInstanceOf(ObjectSchema::class, $jsonSchema);
+        self::assertInstanceOf(OneOfSchema::class, $jsonSchema);
         self::assertNotNull($shapeSchema->discriminator);
         self::assertSame('type', $shapeSchema->discriminator->propertyName);
         self::assertSame(['given' => Fixture\GivenName::class, 'family' => Fixture\FamilyName::class], $shapeSchema->discriminator->mapping);

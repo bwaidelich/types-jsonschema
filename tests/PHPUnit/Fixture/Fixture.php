@@ -302,6 +302,13 @@ class SomeShapeWithDiscriminatedUnionType
     ) {}
 }
 
+class SomeShapeWithInterfaceProperty
+{
+    public function __construct(
+        public readonly SomeInterfaceWithDiscriminator $property,
+    ) {}
+}
+
 #[FloatBased(minimum: -180.0, maximum: 180.5)]
 final class Longitude
 {

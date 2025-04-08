@@ -158,37 +158,8 @@ final class JSONSchemaGenerator
 
     public static function fromShapeSchema(Types\ShapeSchema $schema): ObjectSchema
     {
-        return self::fromShapeOrInterfaceSchema($schema);
-    }
-
-    public static function fromInterfaceSchema(Types\InterfaceSchema $schema): ObjectSchema
-    {
-        return self::fromShapeOrInterfaceSchema($schema);
-    }
-
-    public static function fromOneOfSchema(Types\OneOfSchema $schema): OneOfSchema
-    {
-        $result = OneOfSchema::create(
-            ...array_map(self::fromSchema(...), $schema->subSchemas),
-        );
-        if ($schema->discriminator !== null) {
-            $result = $result->withDiscriminator(new Discriminator($schema->discriminator->propertyName, $schema->discriminator->mapping));
-        }
-        return $result;
-    }
-
-    private static function fromShapeOrInterfaceSchema(Types\ShapeSchema|Types\InterfaceSchema $schema): ObjectSchema
-    {
-        if ($schema instanceof Types\InterfaceSchema) {
-            $discriminatorPropertyName = $schema->discriminator->propertyName ?? '__type';
-            $propertySchemas = [
-                $discriminatorPropertyName => new StringSchema(description: 'interface type discriminator'),
-            ];
-            $requiredProperties = [$discriminatorPropertyName];
-        } else {
-            $propertySchemas = [];
-            $requiredProperties = [];
-        }
+        $propertySchemas = [];
+        $requiredProperties = [];
         foreach ($schema->propertySchemas as $propertyName => $propertySchema) {
             if ($propertySchema instanceof Types\OptionalSchema) {
                 $propertySchema = $propertySchema->wrapped;
@@ -207,6 +178,28 @@ final class JSONSchemaGenerator
             additionalProperties: false,
             required: $requiredProperties !== [] ? $requiredProperties : null,
         );
+    }
+
+    public static function fromInterfaceSchema(Types\InterfaceSchema $schema): OneOfSchema
+    {
+        $result = OneOfSchema::create(
+            ...array_map(self::fromSchema(...), $schema->implementationSchemas()),
+        );
+        if ($schema->discriminator !== null) {
+            $result = $result->withDiscriminator(new Discriminator($schema->discriminator->propertyName, $schema->discriminator->mapping));
+        }
+        return $result;
+    }
+
+    public static function fromOneOfSchema(Types\OneOfSchema $schema): OneOfSchema
+    {
+        $result = OneOfSchema::create(
+            ...array_map(self::fromSchema(...), $schema->subSchemas),
+        );
+        if ($schema->discriminator !== null) {
+            $result = $result->withDiscriminator(new Discriminator($schema->discriminator->propertyName, $schema->discriminator->mapping));
+        }
+        return $result;
     }
 
     public static function fromStringSchema(Types\StringSchema $schema): StringSchema
