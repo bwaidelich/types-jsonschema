@@ -36,13 +36,9 @@ final class OneOfSchema implements IteratorAggregate, Schema
 
     public function jsonSerialize(): array
     {
-        $result = [
+        return [
             'oneOf' => $this->items,
         ];
-        if ($this->discriminator !== null) {
-            $result['discriminator'] = $this->discriminator;
-        }
-        return $result;
     }
 
     public function getIterator(): Traversable
