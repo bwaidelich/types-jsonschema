@@ -2,8 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Wwwision\TypesJSONSchema;
+namespace Wwwision\TypesJsonSchema;
 
+use Closure;
 use InvalidArgumentException;
 use ReflectionAttribute;
 use ReflectionClass;
@@ -12,55 +13,91 @@ use ReflectionFunctionAbstract;
 use ReflectionNamedType;
 use ReflectionParameter;
 use Webmozart\Assert\Assert;
+use Wwwision\JsonSchema\ArraySchema;
+use Wwwision\JsonSchema\BooleanSchema;
+use Wwwision\JsonSchema\Discriminator;
+use Wwwision\JsonSchema\IntegerSchema;
+use Wwwision\JsonSchema\NumberSchema;
+use Wwwision\JsonSchema\ObjectProperties;
+use Wwwision\JsonSchema\ObjectSchema;
+use Wwwision\JsonSchema\OneOfSchema;
+use Wwwision\JsonSchema\Schema;
+use Wwwision\JsonSchema\SchemaWithDescription;
+use Wwwision\JsonSchema\StringFormat;
+use Wwwision\JsonSchema\StringSchema;
 use Wwwision\Types\Attributes\Description;
 use Wwwision\Types\Parser;
 use Wwwision\Types\Schema as Types;
 use Wwwision\Types\Schema\LiteralBooleanSchema;
 use Wwwision\Types\Schema\LiteralIntegerSchema;
 use Wwwision\Types\Schema\LiteralStringSchema;
-use Wwwision\TypesJSONSchema\Types\ArraySchema;
-use Wwwision\TypesJSONSchema\Types\BooleanSchema;
-use Wwwision\TypesJSONSchema\Types\Discriminator;
-use Wwwision\TypesJSONSchema\Types\IntegerSchema;
-use Wwwision\TypesJSONSchema\Types\NumberSchema;
-use Wwwision\TypesJSONSchema\Types\ObjectProperties;
-use Wwwision\TypesJSONSchema\Types\ObjectSchema;
-use Wwwision\TypesJSONSchema\Types\OneOfSchema;
-use Wwwision\TypesJSONSchema\Types\Schema;
-use Wwwision\TypesJSONSchema\Types\SchemaWithDescription;
-use Wwwision\TypesJSONSchema\Types\StringFormat;
-use Wwwision\TypesJSONSchema\Types\StringSchema;
 
 use function Wwwision\Types\instantiate;
 
-final class JSONSchemaGenerator
+/**
+ * @phpstan-type SchemaCallback Closure(Types\Schema, Closure(Types\Schema): Schema): Schema
+ */
+final class JsonSchemaGenerator
 {
+    private readonly JsonSchemaGeneratorOptions $options;
+
+    public function __construct(
+        JsonSchemaGeneratorOptions|null $options = null,
+    ) {
+        $this->options = $options ?? JsonSchemaGeneratorOptions::create();
+    }
+
+
     /**
      * @param class-string $className
      * @return Schema
      */
-    public static function fromClass(string $className): Schema
+    public function fromClass(string $className): Schema
     {
         $schema = Parser::getSchema($className);
-        return self::fromSchema($schema);
+        return $this->fromSchema($schema);
     }
 
-    public static function fromReflectionParameter(ReflectionParameter $reflectionParameter): Schema
+    public function fromReflectionParameter(ReflectionParameter $reflectionParameter): Schema
     {
         $parameterReflectionType = $reflectionParameter->getType();
         Assert::isInstanceOf($parameterReflectionType, ReflectionNamedType::class);
-        $parameterSchema = self::reflectionTypeToSchema($parameterReflectionType);
+        $parameterSchema = $this->reflectionTypeToSchema($parameterReflectionType);
 
-        $schema = self::fromSchema($parameterSchema);
+        $schema = $this->fromSchema($parameterSchema);
 
-        $description = self::getDescription($reflectionParameter);
+        $description = $this->getDescription($reflectionParameter);
         if ($description !== null && $schema instanceof SchemaWithDescription) {
             $schema = $schema->withDescription($description);
         }
         return $schema;
     }
 
-    private static function reflectionTypeToSchema(ReflectionNamedType $reflectionType): Types\Schema
+    public function fromSchema(Types\Schema $schema): Schema
+    {
+        $middlewareChain = array_reduce(
+            array_reverse($this->options->middlewares),
+            static fn(callable $next, callable $middleware) => static fn(Types\Schema $schema): Schema => $middleware($schema, $next),
+            fn(Types\Schema $schema): Schema => match ($schema::class) {
+                Types\EnumSchema::class => $this->fromEnumSchema($schema),
+                Types\IntegerSchema::class => $this->fromIntegerSchema($schema),
+                Types\ListSchema::class => $this->fromListSchema($schema),
+                Types\LiteralBooleanSchema::class => $this->fromLiteralBooleanSchema($schema),
+                Types\LiteralIntegerSchema::class => $this->fromLiteralIntegerSchema($schema),
+                Types\LiteralStringSchema::class => $this->fromLiteralStringSchema($schema),
+                Types\LiteralFloatSchema::class => $this->fromLiteralFloatSchema($schema),
+                Types\ShapeSchema::class => $this->fromShapeSchema($schema),
+                Types\InterfaceSchema::class => $this->fromInterfaceSchema($schema),
+                Types\StringSchema::class => $this->fromStringSchema($schema),
+                Types\FloatSchema::class => $this->fromFloatSchema($schema),
+                Types\OneOfSchema::class => $this->fromOneOfSchema($schema),
+                default => throw new InvalidArgumentException(sprintf('Schema of type "%s" cannot be converted to JSON schema directly', get_debug_type($schema)), 1705424391),
+            },
+        );
+        return $middlewareChain($schema);
+    }
+
+    private function reflectionTypeToSchema(ReflectionNamedType $reflectionType): Types\Schema
     {
         if ($reflectionType->isBuiltin()) {
             return match ($reflectionType->getName()) {
@@ -76,26 +113,7 @@ final class JSONSchemaGenerator
         return Parser::getSchema($typeClassName);
     }
 
-    public static function fromSchema(Types\Schema $schema): Schema
-    {
-        return match ($schema::class) {
-            Types\EnumSchema::class => self::fromEnumSchema($schema),
-            Types\IntegerSchema::class => self::fromIntegerSchema($schema),
-            Types\ListSchema::class => self::fromListSchema($schema),
-            Types\LiteralBooleanSchema::class => self::fromLiteralBooleanSchema($schema),
-            Types\LiteralIntegerSchema::class => self::fromLiteralIntegerSchema($schema),
-            Types\LiteralStringSchema::class => self::fromLiteralStringSchema($schema),
-            Types\LiteralFloatSchema::class => self::fromLiteralFloatSchema($schema),
-            Types\ShapeSchema::class => self::fromShapeSchema($schema),
-            Types\InterfaceSchema::class => self::fromInterfaceSchema($schema),
-            Types\StringSchema::class => self::fromStringSchema($schema),
-            Types\FloatSchema::class => self::fromFloatSchema($schema),
-            Types\OneOfSchema::class => self::fromOneOfSchema($schema),
-            default => throw new InvalidArgumentException(sprintf('Schema of type "%s" cannot be converted to JSON schema directly', get_debug_type($schema)), 1705424391),
-        };
-    }
-
-    public static function fromEnumSchema(Types\EnumSchema $schema): StringSchema|IntegerSchema
+    private function fromEnumSchema(Types\EnumSchema $schema): StringSchema|IntegerSchema
     {
         if ($schema->getBackingType() === 'int') {
             return new IntegerSchema(
@@ -109,8 +127,9 @@ final class JSONSchemaGenerator
         );
     }
 
-    public static function fromIntegerSchema(Types\IntegerSchema $schema): IntegerSchema
+    private function fromIntegerSchema(Types\IntegerSchema $schema): IntegerSchema
     {
+
         return new IntegerSchema(
             description: $schema->getDescription(),
             minimum: $schema->minimum,
@@ -118,45 +137,45 @@ final class JSONSchemaGenerator
         );
     }
 
-    public static function fromListSchema(Types\ListSchema $schema): ArraySchema
+    private function fromListSchema(Types\ListSchema $schema): ArraySchema
     {
         return new ArraySchema(
             description: $schema->getDescription(),
-            items: self::fromSchema($schema->itemSchema),
+            items: $this->fromSchema($schema->itemSchema),
             minItems: $schema->minCount,
             maxItems: $schema->maxCount,
         );
     }
 
-    public static function fromLiteralBooleanSchema(Types\LiteralBooleanSchema $schema): BooleanSchema
+    private function fromLiteralBooleanSchema(Types\LiteralBooleanSchema $schema): BooleanSchema
     {
         return new BooleanSchema(
             description: $schema->getDescription(),
         );
     }
 
-    public static function fromLiteralIntegerSchema(Types\LiteralIntegerSchema $schema): IntegerSchema
+    private function fromLiteralIntegerSchema(Types\LiteralIntegerSchema $schema): IntegerSchema
     {
         return new IntegerSchema(
             description: $schema->getDescription(),
         );
     }
 
-    public static function fromLiteralStringSchema(Types\LiteralStringSchema $schema): StringSchema
+    private function fromLiteralStringSchema(Types\LiteralStringSchema $schema): StringSchema
     {
         return new StringSchema(
             description: $schema->getDescription(),
         );
     }
 
-    public static function fromLiteralFloatSchema(Types\LiteralFloatSchema $schema): NumberSchema
+    private function fromLiteralFloatSchema(Types\LiteralFloatSchema $schema): NumberSchema
     {
         return new NumberSchema(
             description: $schema->getDescription(),
         );
     }
 
-    public static function fromShapeSchema(Types\ShapeSchema $schema): ObjectSchema
+    private function fromShapeSchema(Types\ShapeSchema $schema): ObjectSchema
     {
         $propertySchemas = [];
         $requiredProperties = [];
@@ -166,43 +185,44 @@ final class JSONSchemaGenerator
             } else {
                 $requiredProperties[] = $propertyName;
             }
-            $propertySchemas[$propertyName] = self::fromSchema($propertySchema);
+            $propertySchemas[$propertyName] = $this->fromSchema($propertySchema);
             $overriddenPropertyDescription = $schema->overriddenPropertyDescription($propertyName);
             if ($overriddenPropertyDescription !== null && $propertySchemas[$propertyName] instanceof SchemaWithDescription) {
                 $propertySchemas[$propertyName] = $propertySchemas[$propertyName]->withDescription($overriddenPropertyDescription);
             }
         }
-        return new ObjectSchema(
+        $objectSchema = new ObjectSchema(
             description: $schema->getDescription(),
             properties: ObjectProperties::create(...$propertySchemas),
             additionalProperties: false,
             required: $requiredProperties !== [] ? $requiredProperties : null,
         );
+        return $objectSchema;
     }
 
-    public static function fromInterfaceSchema(Types\InterfaceSchema $schema): OneOfSchema
+    private function fromInterfaceSchema(Types\InterfaceSchema $schema): OneOfSchema
     {
         $result = OneOfSchema::create(
-            ...array_map(self::fromSchema(...), $schema->implementationSchemas()),
+            ...array_map($this->fromSchema(...), $schema->implementationSchemas()),
         );
-        if ($schema->discriminator !== null) {
+        if ($this->options->includeDiscriminator && $schema->discriminator !== null) {
             $result = $result->withDiscriminator(new Discriminator($schema->discriminator->propertyName, $schema->discriminator->mapping));
         }
         return $result;
     }
 
-    public static function fromOneOfSchema(Types\OneOfSchema $schema): OneOfSchema
+    private function fromOneOfSchema(Types\OneOfSchema $schema): OneOfSchema
     {
         $result = OneOfSchema::create(
-            ...array_map(self::fromSchema(...), $schema->subSchemas),
+            ...array_map($this->fromSchema(...), $schema->subSchemas),
         );
-        if ($schema->discriminator !== null) {
+        if ($this->options->includeDiscriminator && $schema->discriminator !== null) {
             $result = $result->withDiscriminator(new Discriminator($schema->discriminator->propertyName, $schema->discriminator->mapping));
         }
         return $result;
     }
 
-    public static function fromStringSchema(Types\StringSchema $schema): StringSchema
+    private function fromStringSchema(Types\StringSchema $schema): StringSchema
     {
         return new StringSchema(
             description: $schema->getDescription(),
@@ -213,7 +233,7 @@ final class JSONSchemaGenerator
         );
     }
 
-    public static function fromFloatSchema(Types\FloatSchema $schema): NumberSchema
+    private function fromFloatSchema(Types\FloatSchema $schema): NumberSchema
     {
         return new NumberSchema(
             description: $schema->getDescription(),
@@ -227,7 +247,7 @@ final class JSONSchemaGenerator
      * @param ReflectionParameter|ReflectionClass<object>|ReflectionClassConstant|ReflectionFunctionAbstract $reflection
      * @return string|null
      */
-    private static function getDescription(ReflectionParameter|ReflectionClass|ReflectionClassConstant|ReflectionFunctionAbstract $reflection): ?string
+    private function getDescription(ReflectionParameter|ReflectionClass|ReflectionClassConstant|ReflectionFunctionAbstract $reflection): null|string
     {
         $descriptionAttributes = $reflection->getAttributes(Description::class, ReflectionAttribute::IS_INSTANCEOF);
         if (!isset($descriptionAttributes[0])) {

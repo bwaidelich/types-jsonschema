@@ -2,9 +2,8 @@
 
 declare(strict_types=1);
 
-namespace Wwwision\TypesJSONSchema\Tests\PHPUnit;
+namespace Wwwision\TypesJsonSchema\Tests\PHPUnit;
 
-use Exception;
 use Generator;
 use PHPUnit\Framework\Attributes\CoversNothing;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -20,7 +19,7 @@ use function sprintf;
 #[CoversNothing]
 final class ReadmeCodeBlockTest extends TestCase
 {
-    private static ?string $previousNamespace = null;
+    private static null|string $previousNamespace = null;
 
     public static function code_blocks_dataProvider(): Generator
     {
@@ -44,26 +43,30 @@ final class ReadmeCodeBlockTest extends TestCase
         if (self::$previousNamespace !== null && str_starts_with(trim($code), '// ...')) {
             $namespace = self::$previousNamespace;
         } else {
-            $namespace = "Wwwision\TypesJSONSchema\Tests\CodeBlock_$lineNumber";
+            $namespace = "Wwwision\TypesJsonSchema\Tests\CodeBlock_$lineNumber";
         }
         self::$previousNamespace = $namespace;
         $namespacedCode = <<<CODE
             namespace $namespace {
-                use Countable;
-                use Closure;
-                use JsonSerializable;
-                use IteratorAggregate;
                 use ArrayIterator;
+                use Closure;
+                use Countable;
+                use IteratorAggregate;
+                use JsonSerializable;
                 use Traversable;
+                use Wwwision\JsonSchema\Schema as JsonSchema;
                 use Wwwision\Types\Attributes\Description;
-                use Wwwision\Types\Attributes\IntegerBased;
                 use Wwwision\Types\Attributes\FloatBased;
+                use Wwwision\Types\Attributes\IntegerBased;
                 use Wwwision\Types\Attributes\ListBased;
                 use Wwwision\Types\Attributes\StringBased;
                 use Wwwision\Types\Exception\CoerceException;
                 use Wwwision\Types\Parser;
+                use Wwwision\Types\Schema as Types;
                 use Wwwision\Types\Schema\StringTypeFormat;
-                use Wwwision\TypesJSONSchema\JSONSchemaGenerator;
+                use Wwwision\TypesJsonSchema\JsonSchemaGenerator;
+                use Wwwision\TypesJsonSchema\JsonSchemaGeneratorOptions;
+                use Wwwision\TypesJsonSchema\Middleware\SchemaGeneratorMiddleware;
                 use function Wwwision\Types\instantiate;
                 $code
             }

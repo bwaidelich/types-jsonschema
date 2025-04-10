@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Wwwision\TypesJSONSchema\Tests\PHPUnit\Fixture;
+namespace Wwwision\TypesJsonSchema\Tests\PHPUnit\Fixture;
 
 use ArrayIterator;
 use DateTimeImmutable;
@@ -243,11 +243,11 @@ final class ShapeWithOptionalTypes
 {
     public function __construct(
         public readonly FamilyName $stringBased,
-        public readonly ?FamilyName $optionalStringBased = null,
+        public readonly null|FamilyName $optionalStringBased = null,
         #[Description('Some description')]
-        public readonly ?int $optionalInt = null,
-        public readonly ?bool $optionalBool = false,
-        public readonly ?string $optionalString = null,
+        public readonly null|int $optionalInt = null,
+        public readonly null|bool $optionalBool = false,
+        public readonly null|string $optionalString = null,
     ) {}
 }
 
@@ -288,7 +288,7 @@ interface SomeInterface
     #[Description('Custom description for "someMethod"')]
     public function someMethod(): string;
     #[Description('Custom description for "someOtherMethod"')]
-    public function someOtherMethod(): ?FamilyName;
+    public function someOtherMethod(): null|FamilyName;
 }
 
 #[Discriminator(propertyName: 'type', mapping: ['given' => GivenName::class, 'family' => FamilyName::class])]

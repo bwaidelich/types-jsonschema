@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Wwwision\TypesJSONSchema\Tests\PHPUnit;
+namespace Wwwision\TypesJsonSchema\Tests\PHPUnit;
 
 require_once __DIR__ . '/Fixture/Fixture.php';
 
@@ -12,40 +12,49 @@ use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use ReflectionParameter;
+use Wwwision\JsonSchema\ArraySchema;
+use Wwwision\JsonSchema\BooleanSchema;
+use Wwwision\JsonSchema\Discriminator as JsonSchemaDiscriminator;
+use Wwwision\JsonSchema\IntegerSchema;
+use Wwwision\JsonSchema\NumberSchema;
+use Wwwision\JsonSchema\ObjectProperties;
+use Wwwision\JsonSchema\ObjectSchema;
+use Wwwision\JsonSchema\OneOfSchema;
+use Wwwision\JsonSchema\StringSchema;
 use Wwwision\Types\Attributes\Description;
 use Wwwision\Types\Parser;
-use Wwwision\TypesJSONSchema\JSONSchemaGenerator;
-use Wwwision\TypesJSONSchema\Types\ArraySchema;
-use Wwwision\TypesJSONSchema\Types\BooleanSchema;
-use Wwwision\TypesJSONSchema\Types\Discriminator as JsonSchemaDiscriminator;
-use Wwwision\TypesJSONSchema\Types\IntegerSchema;
-use Wwwision\TypesJSONSchema\Types\NumberSchema;
-use Wwwision\TypesJSONSchema\Types\ObjectProperties;
-use Wwwision\TypesJSONSchema\Types\ObjectSchema;
-use Wwwision\TypesJSONSchema\Types\OneOfSchema;
-use Wwwision\TypesJSONSchema\Types\StringSchema;
+use Wwwision\TypesJsonSchema\JsonSchemaGenerator;
+use Wwwision\TypesJsonSchema\JsonSchemaGeneratorOptions;
 
 #[CoversClass(ArraySchema::class)]
 #[CoversClass(BooleanSchema::class)]
 #[CoversClass(JsonSchemaDiscriminator::class)]
 #[CoversClass(IntegerSchema::class)]
-#[CoversClass(JSONSchemaGenerator::class)]
+#[CoversClass(JsonSchemaGenerator::class)]
 #[CoversClass(NumberSchema::class)]
 #[CoversClass(ObjectProperties::class)]
 #[CoversClass(ObjectSchema::class)]
 #[CoversClass(StringSchema::class)]
-final class JSONSchemaGeneratorTest extends TestCase
+final class JsonSchemaGeneratorTest extends TestCase
 {
+    private JsonSchemaGenerator $generator;
+
+    protected function setUp(): void
+    {
+        $this->generator = new JsonSchemaGenerator();
+    }
+
+
     public function test_fromClass_throws_exception_for_empty_string(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        JSONSchemaGenerator::fromClass('');
+        $this->generator->fromClass('');
     }
 
     public function test_fromClass_throws_exception_if_given_class_does_not_exist(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        JSONSchemaGenerator::fromClass('not-a-class');
+        $this->generator->fromClass('not-a-class');
     }
 
     public static function fromClass_dataProvider(): Generator
@@ -77,7 +86,24 @@ final class JSONSchemaGeneratorTest extends TestCase
     #[DataProvider('fromClass_dataProvider')]
     public function test_fromClass(string $className, string $expectedResult): void
     {
-        $schema = JSONSchemaGenerator::fromClass($className);
+        $schema = $this->generator->fromClass($className);
+        self::assertJsonStringEqualsJsonString($expectedResult, json_encode($schema));
+    }
+
+    public static function fromClass_with_enabled_discriminator_dataProvider(): Generator
+    {
+        yield 'shape with discriminated union type' => ['className' => Fixture\SomeShapeWithDiscriminatedUnionType::class, 'expectedResult' => '{"additionalProperties":false,"properties":{"name":{"discriminator":{"mapping":{"f":"Wwwision\\\\TypesJsonSchema\\\\Tests\\\\PHPUnit\\\\Fixture\\\\FamilyName","g":"Wwwision\\\\TypesJsonSchema\\\\Tests\\\\PHPUnit\\\\Fixture\\\\GivenName"},"propertyName":"t"},"oneOf":[{"description":"First name of a person","maxLength":20,"minLength":3,"type":"string"},{"description":"Last name of a person","maxLength":20,"minLength":3,"type":"string"}]}},"required":["name"],"type":"object"}'];
+        yield 'shape with interface property' => ['className' => Fixture\SomeShapeWithInterfaceProperty::class, 'expectedResult' => '{"additionalProperties":false,"properties":{"property":{"discriminator":{"mapping":{"family":"Wwwision\\\\TypesJsonSchema\\\\Tests\\\\PHPUnit\\\\Fixture\\\\FamilyName","given":"Wwwision\\\\TypesJsonSchema\\\\Tests\\\\PHPUnit\\\\Fixture\\\\GivenName"},"propertyName":"type"},"oneOf":[{"description":"First name of a person","maxLength":20,"minLength":3,"type":"string"},{"description":"Last name of a person","maxLength":20,"minLength":3,"type":"string"}]}},"required":["property"],"type":"object"}'];
+
+        yield 'interface' => ['className' => Fixture\SomeInterface::class, 'expectedResult' => '{"oneOf":[{"description":"First name of a person","maxLength":20,"minLength":3,"type":"string"},{"description":"Last name of a person","maxLength":20,"minLength":3,"type":"string"},{"additionalProperties":false,"description":"First and last name of a person","properties":{"familyName":{"description":"Last name of a person","maxLength":20,"minLength":3,"type":"string"},"givenName":{"description":"Overridden given name description","maxLength":20,"minLength":3,"type":"string"}},"required":["givenName","familyName"],"type":"object"}]}'];
+        yield 'interface with discriminator' => ['className' => Fixture\SomeInterfaceWithDiscriminator::class, 'expectedResult' => '{"discriminator":{"mapping":{"family":"Wwwision\\\\TypesJsonSchema\\\\Tests\\\\PHPUnit\\\\Fixture\\\\FamilyName","given":"Wwwision\\\\TypesJsonSchema\\\\Tests\\\\PHPUnit\\\\Fixture\\\\GivenName"},"propertyName":"type"},"oneOf":[{"description":"First name of a person","maxLength":20,"minLength":3,"type":"string"},{"description":"Last name of a person","maxLength":20,"minLength":3,"type":"string"}]}'];
+    }
+
+    #[DataProvider('fromClass_with_enabled_discriminator_dataProvider')]
+    public function test_fromClassWithEnabledDiscriminiator(string $className, string $expectedResult): void
+    {
+        $generator = new JsonSchemaGenerator(JsonSchemaGeneratorOptions::create(includeDiscriminator: true));
+        $schema = $generator->fromClass($className);
         self::assertJsonStringEqualsJsonString($expectedResult, json_encode($schema));
     }
 
@@ -97,14 +123,14 @@ final class JSONSchemaGeneratorTest extends TestCase
     #[DataProvider('fromReflectionParameter_dataProvider')]
     public function test_fromReflectionParameter(ReflectionParameter $reflectionParameter, string $expectedResult): void
     {
-        $schema = JSONSchemaGenerator::fromReflectionParameter($reflectionParameter);
+        $schema = $this->generator->fromReflectionParameter($reflectionParameter);
         self::assertJsonStringEqualsJsonString($expectedResult, json_encode($schema));
     }
 
     public function test_fromSchema_respects_interface_discriminators(): void
     {
         $shapeSchema = Parser::getSchema(Fixture\SomeInterfaceWithDiscriminator::class);
-        $jsonSchema = JSONSchemaGenerator::fromSchema($shapeSchema);
+        $jsonSchema = $this->generator->fromSchema($shapeSchema);
         self::assertInstanceOf(OneOfSchema::class, $jsonSchema);
         self::assertNotNull($shapeSchema->discriminator);
         self::assertSame('type', $shapeSchema->discriminator->propertyName);
@@ -114,7 +140,8 @@ final class JSONSchemaGeneratorTest extends TestCase
     public function test_fromSchema_respects_union_type_discriminators(): void
     {
         $shapeSchema = Parser::getSchema(Fixture\SomeShapeWithDiscriminatedUnionType::class);
-        $jsonSchema = JSONSchemaGenerator::fromSchema($shapeSchema);
+        $generator = new JsonSchemaGenerator(JsonSchemaGeneratorOptions::create(includeDiscriminator: true));
+        $jsonSchema = $generator->fromSchema($shapeSchema);
         self::assertInstanceOf(ObjectSchema::class, $jsonSchema);
         self::assertNotNull($jsonSchema->properties);
         $oneOfSchema = iterator_to_array($jsonSchema->properties)['name'];
