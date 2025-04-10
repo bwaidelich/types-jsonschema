@@ -17,6 +17,7 @@ use Wwwision\JsonSchema\ArraySchema;
 use Wwwision\JsonSchema\BooleanSchema;
 use Wwwision\JsonSchema\Discriminator;
 use Wwwision\JsonSchema\IntegerSchema;
+use Wwwision\JsonSchema\NullSchema;
 use Wwwision\JsonSchema\NumberSchema;
 use Wwwision\JsonSchema\ObjectProperties;
 use Wwwision\JsonSchema\ObjectSchema;
@@ -79,18 +80,20 @@ final class JsonSchemaGenerator
             array_reverse($this->options->middlewares),
             static fn(callable $next, callable $middleware) => static fn(Types\Schema $schema): Schema => $middleware($schema, $next),
             fn(Types\Schema $schema): Schema => match ($schema::class) {
+                Types\ArraySchema::class => new ArraySchema(description: $schema->getDescription()),
                 Types\EnumSchema::class => $this->fromEnumSchema($schema),
+                Types\FloatSchema::class => $this->fromFloatSchema($schema),
                 Types\IntegerSchema::class => $this->fromIntegerSchema($schema),
+                Types\InterfaceSchema::class => $this->fromInterfaceSchema($schema),
                 Types\ListSchema::class => $this->fromListSchema($schema),
                 Types\LiteralBooleanSchema::class => $this->fromLiteralBooleanSchema($schema),
-                Types\LiteralIntegerSchema::class => $this->fromLiteralIntegerSchema($schema),
-                Types\LiteralStringSchema::class => $this->fromLiteralStringSchema($schema),
                 Types\LiteralFloatSchema::class => $this->fromLiteralFloatSchema($schema),
-                Types\ShapeSchema::class => $this->fromShapeSchema($schema),
-                Types\InterfaceSchema::class => $this->fromInterfaceSchema($schema),
-                Types\StringSchema::class => $this->fromStringSchema($schema),
-                Types\FloatSchema::class => $this->fromFloatSchema($schema),
+                Types\LiteralIntegerSchema::class => $this->fromLiteralIntegerSchema($schema),
+                Types\LiteralNullSchema::class => new NullSchema(),
+                Types\LiteralStringSchema::class => $this->fromLiteralStringSchema($schema),
                 Types\OneOfSchema::class => $this->fromOneOfSchema($schema),
+                Types\ShapeSchema::class => $this->fromShapeSchema($schema),
+                Types\StringSchema::class => $this->fromStringSchema($schema),
                 default => throw new InvalidArgumentException(sprintf('Schema of type "%s" cannot be converted to JSON schema directly', get_debug_type($schema)), 1705424391),
             },
         );
