@@ -17,7 +17,7 @@ class Contact {
     public function __construct(public string $name, public int $age) {}
 }
 
-$schema = JSONSchemaGenerator::fromClass(Contact::class);
+$schema = (new JsonSchemaGenerator())->fromClass(Contact::class);
 
 $expected = <<<JSON
 {
@@ -91,7 +91,7 @@ final class Contact {
     ) {}
 }
 
-$schema = JSONSchemaGenerator::fromClass(Contact::class);
+$schema = (new JsonSchemaGenerator())->fromClass(Contact::class);
 
 $expected = <<<JSON
 {
@@ -139,6 +139,30 @@ $expected = <<<JSON
 JSON;
 
 assert(json_encode($schema, JSON_PRETTY_PRINT) === $expected);
+```
+
+### Middlewares (version 2.0)
+
+Starting with version 2.0, middlewares can be registered to modify the schema generation process.
+This is useful for logging, caching, or modifying the generated schema:
+
+```php
+// ...
+
+class LoggingMiddleware implements SchemaGeneratorMiddleware {
+    public array $log = [];
+    public function __invoke(Types\Schema $schema, Closure $next): JsonSchema
+    {
+        $this->log[] = $schema->getName();
+        return $next($schema);
+    }
+}
+
+$middleware = new LoggingMiddleware();
+$options = JsonSchemaGeneratorOptions::create()->withMiddleware($middleware);
+$schema = (new JsonSchemaGenerator($options))->fromClass(Contact::class);
+
+assert($middleware->log === ['Contact', 'HonorificTitle', 'FullName', 'GivenName', 'FamilyName', 'boolean']);
 ```
 
 ## Contribution
