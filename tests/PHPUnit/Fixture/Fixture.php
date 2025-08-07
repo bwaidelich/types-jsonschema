@@ -362,3 +362,8 @@ final class ImpossibleList
 {
     private function __construct(private readonly array $items) {}
 }
+
+final class EmptyObject
+{
+    public function __construct() {}
+}

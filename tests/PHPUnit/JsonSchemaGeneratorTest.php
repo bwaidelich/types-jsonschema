@@ -81,6 +81,8 @@ final class JsonSchemaGeneratorTest extends TestCase
 
         yield 'interface' => ['className' => Fixture\SomeInterface::class, 'expectedResult' => '{"oneOf":[{"description":"First name of a person","maxLength":20,"minLength":3,"type":"string"},{"description":"Last name of a person","maxLength":20,"minLength":3,"type":"string"},{"additionalProperties":false,"description":"First and last name of a person","properties":{"familyName":{"description":"Last name of a person","maxLength":20,"minLength":3,"type":"string"},"givenName":{"description":"Overridden given name description","maxLength":20,"minLength":3,"type":"string"}},"required":["givenName","familyName"],"type":"object"}]}'];
         yield 'interface with discriminator' => ['className' => Fixture\SomeInterfaceWithDiscriminator::class, 'expectedResult' => '{"oneOf":[{"description":"First name of a person","maxLength":20,"minLength":3,"type":"string"},{"description":"Last name of a person","maxLength":20,"minLength":3,"type":"string"}]}'];
+
+        yield 'empty object' => ['className' => Fixture\EmptyObject::class, 'expectedResult' => '{"type":"object","properties":{},"additionalProperties":false}'];
     }
 
     #[DataProvider('fromClass_dataProvider')]
