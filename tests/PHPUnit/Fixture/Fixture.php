@@ -22,7 +22,7 @@ use Wwwision\Types\Schema\StringTypeFormat;
 
 use function Wwwision\Types\instantiate;
 
-#[StringBased(minLength: 3, maxLength: 20)]
+#[StringBased(minLength: 3, maxLength: 20, examples: ['Jane', 'John'])]
 #[Description('First name of a person')]
 final class GivenName implements SomeInterface, SomeInterfaceWithDiscriminator, JsonSerializable
 {
@@ -66,7 +66,7 @@ final class FamilyName implements JsonSerializable, SomeInterface, SomeInterface
     }
 }
 
-#[IntegerBased(minimum: 1, maximum: 120)]
+#[IntegerBased(minimum: 1, maximum: 120, examples: [33, 66])]
 #[Description('The age of a person in years')]
 final class Age
 {
@@ -309,7 +309,7 @@ class SomeShapeWithInterfaceProperty
     ) {}
 }
 
-#[FloatBased(minimum: -180.0, maximum: 180.5)]
+#[FloatBased(minimum: -180.0, maximum: 180.5, examples: [77.0368])]
 final class Longitude
 {
     private function __construct(

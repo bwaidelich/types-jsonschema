@@ -135,6 +135,7 @@ final class JsonSchemaGenerator
 
         return new IntegerSchema(
             description: $schema->getDescription(),
+            examples: $schema->examples,
             minimum: $schema->minimum,
             maximum: $schema->maximum,
         );
@@ -229,6 +230,7 @@ final class JsonSchemaGenerator
     {
         return new StringSchema(
             description: $schema->getDescription(),
+            examples: $schema->examples,
             minLength: $schema->minLength,
             maxLength: $schema->maxLength,
             format: $schema->format !== null ? instantiate(StringFormat::class, $schema->format->name) : null,
@@ -240,6 +242,7 @@ final class JsonSchemaGenerator
     {
         return new NumberSchema(
             description: $schema->getDescription(),
+            examples: $schema->examples,
             minimum: $schema->minimum,
             maximum: $schema->maximum,
         );
